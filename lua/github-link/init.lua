@@ -14,7 +14,7 @@ end
 ---@return string ref The ref name
 ---@return Error | nil err The error message or nil if no error
 local function get_ref(which_ref)
-  local ref
+	local ref
 	if which_ref == "branch" then
 		ref = vim.fn.systemlist("git rev-parse --abbrev-ref HEAD")[1]
 		local exist = vim.fn.systemlist("git ls-remote --exit-code --heads origin " .. ref)[1]
@@ -94,9 +94,11 @@ local function trim_git_suffix(str)
 	return string.gsub(str, ".git$", "")
 end
 
+local M = {}
+
 ---@param remote string The remote name
 ---@return string | nil link The link or nil if error
-local function get_repo_link(remote)
+function M.get_repo_link(remote)
 	if string.match(remote, "^git") then
 		local link = string.gsub(trim_git_suffix(remote), "^git@(.*):(.*)$", "https://%1/%2")
 		return link
@@ -104,14 +106,12 @@ local function get_repo_link(remote)
 		local link = string.gsub(trim_git_suffix(remote), "^https://(.*@)?(.*)$", "https://%2")
 		return link
 	elseif string.match(remote, "^ssh") then
-		local link = string.gsub(trim_git_suffix(remote), "^ssh://git@(.{-})/(.*)$", "https://%1/%2")
+		local link = string.gsub(trim_git_suffix(remote), "^ssh://git@(.*)$", "https://%1")
 		return link
 	else
 		return nil
 	end
 end
-
-local M = {}
 
 ---@param which_ref "branch" | "head" | "file" The ref type, one of `branch`, `head`, `file`
 function M.get_commit_link(which_ref)
@@ -121,7 +121,7 @@ function M.get_commit_link(which_ref)
 		return
 	end
 
-	local repo = get_repo_link(remote)
+	local repo = M.get_repo_link(remote)
 	if not repo then
 		vim.api.nvim_err_writeln("[github-link.nvim] Unknown remote format")
 		return
@@ -152,7 +152,7 @@ function M.get_commit_link_range(which_ref)
 		return
 	end
 
-	local repo = get_repo_link(remote)
+	local repo = M.get_repo_link(remote)
 	if not repo then
 		vim.api.nvim_err_writeln("[github-link.nvim] Unknown remote format")
 		return
